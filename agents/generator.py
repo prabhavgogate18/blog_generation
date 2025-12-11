@@ -65,7 +65,7 @@ def generator_node(state: BlogState) -> BlogState:
             "---------------------\n\n"
             "Using BOTH the research notes and the GLOBAL MISTAKE MEMORY above, "
             "rewrite or refine the blog so that you DO NOT repeat any prior mistakes. "
-            "Preserve strengths, fix weaknesses, and keep the requested tone and length."
+            "Preserve strengths, fix weaknesses, and keep the requested tone and lengths."
         )
 
     messages = prompt.format_messages(
