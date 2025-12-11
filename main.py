@@ -1,3 +1,4 @@
+# main.py (complete)
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
@@ -5,7 +6,8 @@ from rich.table import Table
 from graph.builder import build_blog_graph
 from graph.state import BlogState
 
-
+# Guardrails agent (pre-flight validation)
+from agents.guardrails import guardrails_node  # ensure this file exists
 console = Console()
 
 
@@ -39,9 +41,27 @@ def main():
     load_dotenv()
     state = get_user_input()
 
+    # --- RUN GUARDRAILS BEFORE BUILDING/INVOKING GRAPH ---
+    console.print("[dim]Running guardrails on inputs...[/dim]")
+    state = guardrails_node(state)
+
+    if not state.get("guardrails_valid", True):
+        console.print("\n[bold red]Input failed guardrails validation.[/bold red]\n")
+        issues = state.get("guardrails_issues", [])
+        if issues:
+            console.print("[bold]Detected issues:[/bold]")
+            for i, it in enumerate(issues, 1):
+                console.print(f"  {i}. {it}")
+        action = state.get("guardrails_action", "")
+        if action:
+            console.print(f"\n[yellow]Action: {action}[/yellow]\n")
+        console.print("[bold]Please re-run with corrected inputs.[/bold]")
+        return  # abort early
+
+    # Build graph and run pipeline
     app = build_blog_graph()
 
-    console.print("\n[bold yellow]Running multi-agent blog generator...[/bold yellow]")
+    console.print("\n[bold yellow]Running multi-agent blog generator...[/bold yellow]\n")
     console.print("[dim]Note: Research is performed only once in the first iteration[/dim]")
     console.print("[dim]Subsequent iterations refine the blog based on critic feedback[/dim]\n")
 
@@ -53,7 +73,7 @@ def main():
     stop_reason = final_state.get("stop_reason", "Completed")
 
     console.print("\n[bold green]=== BEST BLOG (HIGHEST CONFIDENCE) ===[/bold green]\n")
-    console.print(best_draft)
+    console.print(best_draft or "[dim]No draft produced[/dim]")
 
     console.print("\n[bold magenta]=== METRICS ===[/bold magenta]")
     console.print(f"Final confidence: {scores[-1] * 100:.1f}%" if scores else "N/A")

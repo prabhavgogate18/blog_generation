@@ -32,3 +32,18 @@ def get_critic_llm(temperature: float = 0.0) -> ChatGroq:
         temperature=temperature,
         api_key=api_key,
     )
+
+
+def get_guardrails_llm(temperature: float = 0.0) -> ChatGroq:
+    """
+    LLaMA Guard model for safety validation and input filtering.
+    Perfect for using in the Guardrails Agent.
+    """
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY is not set in .env")
+    return ChatGroq(
+        model="llama-guard-3-1b",
+        temperature=temperature,
+        api_key=api_key,
+    )

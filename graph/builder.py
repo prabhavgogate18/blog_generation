@@ -1,6 +1,10 @@
+# graph/builder.py (guardrails integrated as first node)
 from langgraph.graph import StateGraph, END
 
 from .state import BlogState
+
+# agents
+from agents.guardrails import guardrails_node   # NEW: guardrails node
 from agents.researcher import researcher_node
 from agents.generator import generator_node
 from agents.critic import critic_node
@@ -26,12 +30,18 @@ def orchestrator_router(state: BlogState) -> str:
 def build_blog_graph():
     graph = StateGraph(BlogState)
 
+    # Register nodes
+    graph.add_node("guardrails", guardrails_node)   # entry point: validate inputs inside graph
     graph.add_node("orchestrator", orchestrator_node)
     graph.add_node("researcher", researcher_node)
     graph.add_node("generator", generator_node)
     graph.add_node("critic", critic_node)
 
-    graph.set_entry_point("orchestrator")
+    # Start with guardrails
+    graph.set_entry_point("guardrails")
+
+    # Linear flow: guardrails -> orchestrator -> (researcher|generator) -> critic -> orchestrator
+    graph.add_edge("guardrails", "orchestrator")
 
     graph.add_conditional_edges(
         "orchestrator",
